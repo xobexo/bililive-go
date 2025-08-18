@@ -6,8 +6,8 @@ import Utils from "../../utils/common";
 import './file-list.css';
 import { PaginationConfig } from "antd/lib/pagination";
 import { SorterResult } from "antd/lib/table";
-import Artplayer from "artplayer";
-import mpegtsjs from "mpegts.js";
+let Artplayer: any;
+let mpegtsjs: any;
 
 const api = new API();
 
@@ -102,7 +102,15 @@ class FileList extends React.Component<Props, IState> {
         } else {
             this.setState({
                 isPlayerVisible: true,
-            }, () => {
+            }, async () => {
+                if (!Artplayer) {
+                    const mod = await import(/* webpackChunkName: "artplayer" */ 'artplayer');
+                    Artplayer = mod.default || mod;
+                }
+                if (!mpegtsjs) {
+                    const mod2 = await import(/* webpackChunkName: "mpegts" */ 'mpegts.js');
+                    mpegtsjs = mod2.default || mod2;
+                }
                 const art = new Artplayer({
                     pip: true,
                     setting: true,

@@ -1,9 +1,8 @@
 import React from "react";
-import Editor from 'react-simple-code-editor';
-import { highlight, languages } from 'prismjs';
-import 'prismjs/components/prism-clike';
-import 'prismjs/components/prism-javascript';
-import 'prismjs/themes/prism.css'; //Example style, you can use another
+import React from "react";
+let Editor: any;
+let prismHighlight: any;
+let prismLanguages: any;
 import API from '../../utils/api';
 import { Button } from "antd";
 import './config-info.css';
@@ -26,7 +25,19 @@ class ConfigInfo extends React.Component<Props, IState> {
     }
   }
 
-  componentDidMount(): void {
+  async componentDidMount(): Promise<void> {
+    if (!Editor) {
+      const mod = await import(/* webpackChunkName: "code-editor" */ 'react-simple-code-editor');
+      Editor = mod.default || mod;
+    }
+    if (!prismHighlight || !prismLanguages) {
+      const prism = await import(/* webpackChunkName: "prismjs" */ 'prismjs');
+      await import('prismjs/components/prism-clike');
+      await import('prismjs/components/prism-javascript');
+      await import('prismjs/themes/prism.css');
+      prismHighlight = prism.highlight;
+      prismLanguages = prism.languages;
+    }
     api.getConfigInfo()
       .then((rsp: any) => {
         this.setState({
@@ -60,19 +71,17 @@ class ConfigInfo extends React.Component<Props, IState> {
       return <div>loading...</div>;
     }
     return <div>
+      {Editor ? (
       <Editor
         value={this.state.config}
         onValueChange={code => this.setState({ config: code })}
-        highlight={code => {
-          const ret = highlight(code, languages.js, "js");
-          return ret;
-        }}
+        highlight={code => prismHighlight(code, prismLanguages.js, "js")}
         padding={10}
         style={{
           fontFamily: '"Fira code", "Fira Mono", monospace',
           fontSize: 12,
         }}
-      />
+      />) : (<div>Loading editor...</div>)}
       <Button
         type="default"
         style={{
